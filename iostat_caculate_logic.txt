@@ -1,0 +1,138 @@
+
+            iostat                                                                 |    /proc/diskstat
+                                                                                   |    What:       /proc/diskstats
+                                                                                   |    Date:       February 2008
+                                                                                   |    Contact:    Jerome Marchand <jmarchan@redhat.com>
+                                                                                   |    Description:
+                                                                                   |            The /proc/diskstats file displays the I/O statistics
+                                                                                   |            of block devices. Each line contains the following 14
+                                                                                   |            fields:
+                                                                                   |             1 - major number
+                                                                                   |             2 - minor mumber
+                                                                                   |             3 - device name
+                                                                                   |             4 - reads completed successfully
+                                                                                   |             5 - reads merged
+                                                                                   |             6 - sectors read
+                                                                                   |             7 - time spent reading (ms)
+                                                                                   |             8 - writes completed
+                                                                                   |             9 - writes merged
+                                                                                   |            10 - sectors written
+                                                                                   |            11 - time spent writing (ms)
+                                                                                   |            12 - I/Os currently in progress
+                                                                                   |            13 - time spent doing I/Os (ms)
+                                                                                   |            14 - weighted time spent doing I/Os (ms)
+                                                                                   |
+                                                                                   |            /* major minor name rio rmerge rsect ruse wio wmerge wsect wuse running use aveq */
+                                                                                   |            i = sscanf(line, "%u %u %s %lu %lu %lu %lu %lu %lu %lu %u %u %u %u",
+                                                                                   |                  1 &major,    2 &minor,                 3 dev_name,
+                                                                                   |                  4  &rd_ios,  5 &rd_merges_or_rd_sec,   6 &rd_sec_or_wr_ios,  7 &rd_ticks_or_wr_sec,
+                                                                                   |                  8  &wr_ios,  9 &wr_merges,             10&wr_sec,            11 &wr_ticks, 
+                                                                                   |                  12 &ios_pgr, 13 &tot_ticks,            14&rq_ticks);
+                                                                                   |    
+              Device:                                                              |    
+                     This  column  gives  the  device  (or  partition) name as     |    3 - device name
+                     listed in the /dev directory.                                 |    
+                                                                                   |    
+              tps                                                                  |    S_VALUE(ioj->rd_ios + ioj->wr_ios, ioi->rd_ios + ioi->wr_ios, itv))  4 - reads completed successfully + 8 - writes completed
+                     Indicate the number of transfers  per  second  that  were     |    
+                     issued to the device. A transfer is an I/O request to the     |    
+                     device. Multiple logical requests can be combined into  a     |    
+                     single  I/O request to the device. A transfer is of inde-     |    
+                     terminate size.                                               |    
+                                                                                   |    
+              Blk_read/s (kB_read/s, MB_read/s)                                    |    S_VALUE(ioj->rd_sectors, ioi->rd_sectors, itv) / fctr,
+                     Indicate  the  amount  of  data  read  from  the   device     |    
+                     expressed  in  a  number of blocks (kilobytes, megabytes)     |    
+                     per second. Blocks are equivalent to sectors  and  there-     |    
+                     fore have a size of 512 bytes.                                |    
+                                                                                   |    
+              Blk_wrtn/s (kB_wrtn/s, MB_wrtn/s)                                    |    S_VALUE(ioj->wr_sectors, ioi->wr_sectors, itv) / fctr);
+                     Indicate  the  amount  of  data  written  to  the  device     |    
+                     expressed in a number of  blocks  (kilobytes,  megabytes)     |    
+                     per second.                                                   |    
+                                                                                   |    
+              Blk_read (kB_read, MB_read)                                          |    rd_sec = ioi->rd_sectors - ioj->rd_sectors;             6 - sectors read
+                     The total number of blocks (kilobytes, megabytes) read.       |    
+                                                                                   |    
+              Blk_wrtn (kB_wrtn, MB_wrtn)                                          |    wr_sec = ioi->wr_sectors - ioj->wr_sectors;             10 - sectors written
+                     The  total  number of blocks (kilobytes, megabytes) writ-     |    
+                     ten.                                                          |    
+                                                                                   |    
+              rrqm/s                                                               |    S_VALUE(ioj->rd_merges, ioi->rd_merges, itv),           5 - reads merged
+                     The number of read requests merged per second  that  were     |    
+                     queued to the device.                                         |    
+                                                                                   |    
+              wrqm/s                                                               |    S_VALUE(ioj->wr_merges, ioi->wr_merges, itv));          9 - writes merged
+                     The  number of write requests merged per second that were     |    
+                     queued to the device.                                         |    
+                                                                                   |    
+              r/s                                                                  |    S_VALUE(ioj->rd_ios, ioi->rd_ios, itv),                 4 - reads completed successfully
+                     The number (after merges) of read requests completed  per     |    
+                     second for the device.                                        |    
+                                                                                   |    
+              w/s                                                                  |    S_VALUE(ioj->wr_ios, ioi->wr_ios, itv)                  8 - writes completed
+                     The number (after merges) of write requests completed per     |    
+                     second for the device.                                        |    
+                                                                                   |    
+              rsec/s (rkB/s, rMB/s)                                                |    S_VALUE(ioj->rd_sectors, ioi->rd_sectors, itv) / fctr   6 - sectors read
+                     The number of sectors (kilobytes,  megabytes)  read  from     |    
+                     the device per second.                                        |    
+                                                                                   |    
+              wsec/s (wkB/s, wMB/s)                                                |    S_VALUE(ioj->wr_sectors, ioi->wr_sectors, itv) / fctr    10 - sectors written
+                     The  number  of sectors (kilobytes, megabytes) written to     |    
+                     the device per second.                                        |    
+                                                                                   |    
+              avgrq-sz                                                             |    xds.arqsz = (sdc->nr_ios - sdp->nr_ios) ?      /*  sdc.nr_ios    = ioi->rd_ios + ioi->wr_ios*/   
+                                                                                                                                        4 - reads completed successfully + 8 - writes completed
+                                                                                                        ((sdc->rd_sect - sdp->rd_sect) + (sdc->wr_sect - sdp->wr_sect)) /
+                                                                                                        (6 - sectors read + 10 - sectors written)/
+                                                                                                        ((double) (sdc->nr_ios - sdp->nr_ios)) : 0.0;
+                                                                                                        (4 - reads completed successfully + 8 - writes completed) : 0.0
+                     The average size (in sectors) of the requests  that  were     |    
+                     issued to the device.                                         |    
+                                                                                   |    
+              avgqu-sz                                                             |    S_VALUE(ioj->rq_ticks, ioi->rq_ticks, itv) / 1000.0)    14 - weighted time spent doing I/Os (ms)
+                     The average queue length of the requests that were issued     |    
+                     to the device.                                                |    
+                                                                                   |    
+              await                                                                |    xds.await = (sdc->nr_ios - sdp->nr_ios) ?   
+                                                                                                        ((sdc->rd_ticks - sdp->rd_ticks) + (sdc->wr_ticks - sdp->wr_ticks)) /
+                                                                                                        (7 - time spent reading (ms) + 11 - time spent writing (ms))
+                                                                                                        ((double) (sdc->nr_ios - sdp->nr_ios)) : 0.0;
+                     The average  time  (in  milliseconds)  for  I/O  requests     |    
+                     issued to the device to be served. This includes the time     |    
+                     spent by the requests in queue and the time spent servic-     |    
+                     ing them.                                                     |    
+                                                                                   |    
+              r_await                                                              |    r_await = (ioi->rd_ios - ioj->rd_ios) ?                  4 - reads completed successfully
+                                                                                                      (ioi->rd_ticks - ioj->rd_ticks) /          7 - time spent reading (ms) / 4 - reads completed successfully
+                                                                                                      ((double) (ioi->rd_ios - ioj->rd_ios)) : 0.0;
+
+                     The  average  time  (in  milliseconds)  for read requests     |    
+                     issued to the device to be served. This includes the time     |    
+                     spent by the requests in queue and the time spent servic-     |    
+                     ing them.                                                     |    
+                                                                                   |    
+              w_await                                                              |    w_await = (ioi->wr_ios - ioj->wr_ios) ?                8 - writes completed
+                                                                                                      (ioi->wr_ticks - ioj->wr_ticks) /        11 - time spent writing (ms)/ 8 - writes completed
+                                                                                                      ((double) (ioi->wr_ios - ioj->wr_ios)) : 0.0;
+                     The average time (in  milliseconds)  for  write  requests     |    
+                     issued to the device to be served. This includes the time     |    
+                     spent by the requests in queue and the time spent servic-     |    
+                     ing them.                                                     |    
+                                                                                   |    
+              svctm                                                                |    xds.svctm = tput ? xds->util / tput : 0.0; double tput = ((double) (sdc->nr_ios - sdp->nr_ios)) * HZ / itv;
+                     The  average  service  time  (in  milliseconds)  for  I/O     |    
+                     requests that were issued to the device. Warning! Do  not     |    
+                     trust this field any more.  This field will be removed in     |    
+                     a future sysstat version.                                     |    
+                                                                                   |    
+              %util                                                                |    xds->util  = S_VALUE(sdp->tot_ticks, sdc->tot_ticks, itv);   13 - time spent doing I/Os (ms)
+                     Percentage of elapsed time during which I/O requests were     |    
+                     issued  to  the  device  (bandwidth  utilization  for the     |    
+                     device). Device saturation  occurs  when  this  value  is     |    
+                     close to 100% for devices serving requests serially.  But     |    
+                     for devices serving requests in parallel,  such  as  RAID     |    
+                     arrays  and  modern  SSDs,  this  number does not reflect     |    
+                     their performance limits.                                     |    
+
