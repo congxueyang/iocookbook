@@ -629,6 +629,8 @@ FILES
 #Calculation logic:
 
 
+[https://github.com/congxueyang/iocookbook/blob/master/iostat_caculate_logic.txt](https://github.com/congxueyang/iocookbook/blob/master/iostat_caculate_logic.txt)
+
 
 
 
